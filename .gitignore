@@ -1,0 +1,17 @@
+# 1. Bỏ qua thư mục chứa dữ liệu thô và file nén (Rất quan trọng)
+data/raw/
+*.csv
+*.zip
+*.rar
+*.xlsx
+
+# 2. Bỏ qua các file tạm và cấu hình môi trường của Python
+__pycache__/
+.ipynb_checkpoints/
+.env
+venv/
+env/
+
+# 3. Bỏ qua các file hệ điều hành tự sinh ra
+.DS_Store
+Thumbs.db
