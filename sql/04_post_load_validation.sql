@@ -283,9 +283,6 @@ FROM staging.olist_geolocation
 ORDER BY table_name, column_name;
 
 
-
-/* Xác nhận được rằng các cột quan trọng đã được kiểm tra missing */
-
 -- Referential Integrity Check
 SELECT COUNT(*) AS orphan_orders_customer FROM staging.olist_orders o
 LEFT JOIN staging.olist_customers c ON o.customer_id = c.customer_id WHERE c.customer_id IS NULL;
@@ -341,4 +338,7 @@ SELECT customer_id, customer_unique_id, COUNT(*) AS so_lan_lap
 FROM staging.olist_customers
 GROUP BY customer_id, customer_unique_id
 HAVING COUNT(*) > 1;
+
+
+
 
