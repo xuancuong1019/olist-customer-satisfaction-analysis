@@ -339,6 +339,55 @@ FROM staging.olist_customers
 GROUP BY customer_id, customer_unique_id
 HAVING COUNT(*) > 1;
 
+SELECT DISTINCT p.product_category_name
+FROM staging.olist_products p
+LEFT JOIN staging.product_category c ON p.product_category_name = c.product_category_name
+WHERE p.product_category_name IS NOT NULL AND c.product_category_name IS NULL;
+
+/*Missing Values Checking In Detail*/
+
+SELECT
+    *
+FROM staging.olist_orders o
+
+LEFT JOIN staging.olist_customers c
+    ON o.customer_id = c.customer_id
+
+LEFT JOIN staging.olist_order_items oi
+    ON o.order_id = oi.order_id
+
+LEFT JOIN staging.olist_products p
+    ON oi.product_id = p.product_id
+
+LEFT JOIN staging.olist_sellers s
+    ON oi.seller_id = s.seller_id
+
+LEFT JOIN staging.olist_order_payments op
+    ON o.order_id = op.order_id
+
+LEFT JOIN staging.olist_order_reviews r
+    ON o.order_id = r.order_id
+
+WHERE (o.order_approved_at IS NULL OR TRIM(o.order_approved_at) = '')
+  AND o.order_status = 'delivered';
+
+SELECT *
+FROM staging.olist_orders
+WHERE order_status = 'delivered'
+  AND order_approved_at IS NULL;
+ 
+
+/*Sau khi xác định 14 đơn hàng có trạng thái delivered nhưng bị thiếu giá trị ở order_approved_at, 
+tôi nhận thấy một điểm bất thường đáng chú ý: ngày giao hàng (order_delivered_customer_date) của cả 
+14 đơn hàng đều nằm trong khoảng từ ngày 17/02/2017 đến 19/02/2017. 
+
+Điều này cho thấy việc thiếu dữ liệu ở order_approved_at có thể tập trung trong một khoảng thời gian cụ thể. 
+Vì vậy, cần tiếp tục kiểm tra các đơn hàng trong và xung quanh khoảng thời gian này để xác định liệu đây 
+là một hiện tượng ngẫu nhiên hay có liên quan đến quá trình ghi nhận dữ liệu.
+
+Ngoài ra còn 1 phát hiện nữa, trong khi code python chỉ ra có 14 đơn hàng thì ở SQl lại liệt kê ra được 15 đơn hàng, khi kiểm tra
+lại thì có một đơn hàng order_id: 88083e8f64d95b932164187484d90212 bị trùng lặp khi xem SQL. Khi check lại trong excel thì 
+chỉ tồn tại đúng 1 dòng như này nhưng tại sao khi liệt kê SQL lại có hiện tượng này? Phát hiện ra là do câu lệnh JOIN trong SQL
 
 
-
+*/
