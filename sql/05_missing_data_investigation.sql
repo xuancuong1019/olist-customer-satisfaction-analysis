@@ -168,6 +168,51 @@ ORDER BY order_purchase_timestamp;
 
 
 /*Sau khi tìm hiểu và đánh giá, tôi quyết định dừng việc điều tra missing values ở cột này 
-vì chưa đủ bằng chứng dẫn đến nguyên nhân và thiếu tri thức về quy trình nghiệp vụ*/
+vì chưa đủ bằng chứng dẫn đến nguyên nhân và thiếu tri thức về quy trình nghiệp vụ. Đồng thời con số 160/99441 dòng 
+là quá nhỏ để thực sự ảnh hưởng đến kết luận và phân tích kinh doanh. Đây là giới hạn của dữ liệu công khai*/
 
-/*Phương án hiện tại là giữ nguyên các giá trị khuyết */
+/*Phương án hiện tại là chuẩn hóa NULL cho các giá trị khuyết ở cột order_approved_at*/
+
+/*Đối với 14 đơn bất thường thì sẽ lưu vào bảng log, không sửa dữ liệu gốc*/
+
+
+/*Investigating missing values in order_delivered_carrier_date*/
+
+SELECT
+    order_status,
+    COUNT(*) AS total_orders,
+    SUM(
+        CASE
+            WHEN order_delivered_carrier_date IS NULL
+              OR TRIM(order_delivered_carrier_date) = ''
+            THEN 1
+            ELSE 0
+        END
+    ) AS missing_carrier_date
+FROM staging.olist_orders
+GROUP BY order_status
+ORDER BY missing_carrier_date DESC;
+
+/*Sau khi kiểm tra tổng các đơn hàng theo trạng thái thì nhận thấy rằng dữ liệu đúng với thự tế khi các đơn
+bị khuyết ngày giao cho đơn vị vận chuyển tập trung ở unavailable, canceled, invoiced và processing. Trong 625 
+đơn hàng bị canceled thì chỉ có 550 đơn bị khuyết, nên kiểm tra lại số đơn hàng này */
+
+/*Ngoài ra thì hệ thống cũng ghi nhận 2 đơn hàng ở trạng thái delivered bị khuyết, cũng cần kiểm tra 2 đơn
+hàng này*/
+
+
+SELECT
+    *,
+    LEN(order_delivered_carrier_date) AS value_length
+FROM staging.olist_orders
+WHERE order_status = 'delivered'
+  AND (
+      order_delivered_carrier_date IS NULL
+      OR TRIM(order_delivered_carrier_date) = ''
+  );
+
+/*Một phát hiện ngoài lề là trong SQL kiểm tra có 2 đơn hàng delivered bị khuyết ngày giao cho đơn vị vận chuyển
+trong khi kiểm tra bằng filter trong excel thì lại không có missing nào*/
+
+/*Thực tế thì thật sự có 2 đơn bị miss trong Excel nhưng filter lại không nhận ra*/
+
