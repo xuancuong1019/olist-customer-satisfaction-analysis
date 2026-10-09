@@ -166,3 +166,8 @@ WHERE order_status = 'delivered'
   )
 ORDER BY order_purchase_timestamp;
 
+
+/*Sau khi tìm hiểu và đánh giá, tôi quyết định dừng việc điều tra missing values ở cột này 
+vì chưa đủ bằng chứng dẫn đến nguyên nhân và thiếu tri thức về quy trình nghiệp vụ*/
+
+/*Phương án hiện tại là giữ nguyên các giá trị khuyết */
