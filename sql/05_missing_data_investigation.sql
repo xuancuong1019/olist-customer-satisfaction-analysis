@@ -38,6 +38,12 @@ GROUP BY
         THEN 'Missing'
         ELSE 'Not Missing'
     END;
+
+/*Trong tổng số các đơn hàng đã được delivered và sử dụng phương thức thanh toán là boleto, 
+thì chỉ có 14 đơn missing order_approved_at chiếm tỉ lệ 0,073%*. Điều đó cho thấy 
+vấn đề thiếu order_approved_at không xảy ra phổ biến trong toàn bộ nhóm đơn boleto. 
+Tuy nhiên, chúng ta vẫn chưa biết tỷ lệ này có cao bất thường so với những phương thức thanh toán khác 
+hay không./ */
  
 
 SELECT
@@ -63,6 +69,8 @@ JOIN staging.olist_order_payments AS p
 WHERE o.order_status = 'delivered'
 GROUP BY p.payment_type
 ORDER BY missing_rate_pct DESC;
+
+/*Sau khi kiểm tra các đơn hàng với từng loại thanh toán khác nhau, thì duy nhất chỉ có boleto xảy ra trường hợp missing và đúng 14 đơn hàng. Hiện tại chưa thể kết luận được, có hai hướng cần kiểm tra thêm là về thời gian mua hàng và quy trình thanh toán*/
 
 SELECT
     CAST(o.order_purchase_timestamp AS DATE) AS purchase_date,
