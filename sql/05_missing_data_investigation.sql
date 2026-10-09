@@ -70,29 +70,9 @@ WHERE o.order_status = 'delivered'
 GROUP BY p.payment_type
 ORDER BY missing_rate_pct DESC;
 
-/*Sau khi kiểm tra các đơn hàng với từng loại thanh toán khác nhau, thì duy nhất chỉ có boleto xảy ra trường hợp missing và đúng 14 đơn hàng. Hiện tại chưa thể kết luận được, có hai hướng cần kiểm tra thêm là về thời gian mua hàng và quy trình thanh toán*/
-
-SELECT
-    CAST(o.order_purchase_timestamp AS DATE) AS purchase_date,
-    p.payment_type,
-    COUNT(DISTINCT o.order_id) AS total_orders,
-    COUNT(DISTINCT CASE
-        WHEN o.order_approved_at IS NULL
-          OR TRIM(o.order_approved_at) = ''
-        THEN o.order_id
-    END) AS missing_orders
-FROM staging.olist_orders AS o
-JOIN staging.olist_order_payments AS p
-    ON o.order_id = p.order_id
-WHERE CAST(o.order_purchase_timestamp AS DATE)
-      BETWEEN '2017-02-17' AND '2017-02-19'
-GROUP BY
-    CAST(o.order_purchase_timestamp AS DATE),
-    p.payment_type
-ORDER BY
-    purchase_date,
-    p.payment_type;
-
+/*Sau khi kiểm tra các đơn hàng với từng loại thanh toán khác nhau, thì duy nhất chỉ có boleto xảy ra 
+trường hợp missing và đúng 14 đơn hàng. Hiện tại chưa thể kết luận được, có hai hướng cần kiểm tra thêm là 
+về thời gian mua hàng và quy trình thanh toán*/
 
 SELECT
     CAST(o.order_purchase_timestamp AS DATE) AS purchase_date,
@@ -119,6 +99,70 @@ WHERE o.order_status = 'delivered'
 GROUP BY CAST(o.order_purchase_timestamp AS DATE)
 ORDER BY purchase_date;
 
+/*Hiện tại, dữ liệu ủng hộ nhận định rằng các trường hợp missing có xu hướng tập trung vào một số ngày đặt hàng nhất định. 
+Nhưng chưa đủ bằng chứng để kết luận nguyên nhân là boleto hay lỗi hệ thống trong những ngày đó.Có một câu hỏi quan trọng: 
+nếu ngày 18/02 có một vấn đề chung trong hệ thống, tại sao các đơn thanh toán bằng thẻ vẫn có order_approved_at đầy đủ? 
+Điều này khiến giả thuyết về quy trình thanh toán boleto trở nên đáng kiểm tra, nhưng chưa chứng minh được nó.*/
 
 
+WITH order_payment AS (
+    SELECT DISTINCT
+        order_id,
+        payment_type
+    FROM staging.olist_order_payments
+),
+daily_payment_stats AS (
+    SELECT
+        CAST(o.order_purchase_timestamp AS DATE) AS purchase_date,
+        p.payment_type,
+        COUNT(DISTINCT o.order_id) AS total_orders,
+        COUNT(DISTINCT CASE
+            WHEN o.order_approved_at IS NULL
+              OR TRIM(o.order_approved_at) = ''
+            THEN o.order_id
+        END) AS missing_orders
+    FROM staging.olist_orders AS o
+    INNER JOIN order_payment AS p
+        ON o.order_id = p.order_id
+    WHERE o.order_status = 'delivered'
+      AND CAST(o.order_purchase_timestamp AS DATE)
+          BETWEEN '2017-02-17' AND '2017-02-19'
+    GROUP BY
+        CAST(o.order_purchase_timestamp AS DATE),
+        p.payment_type
+)
+SELECT
+    purchase_date,
+    payment_type,
+    total_orders,
+    missing_orders,
+    CAST(
+        100.0 * missing_orders
+        / NULLIF(total_orders, 0)
+        AS DECIMAL(10, 2)
+    ) AS missing_rate_pct
+FROM daily_payment_stats
+ORDER BY
+    purchase_date,
+    payment_type;
+
+
+/*Trong khoảng thời gian đang kiểm tra chỉ duy nhất các đơn hàng thanh toán bằng boleto xảy ra missing
+Kiểm tra giả thuyết cuối cùng vấn đề có thể liên quan đến cách hệ thống ghi nhận hoặc xử lý thông tin phê duyệt đối với một nhóm đơn boleto, 
+thay vì một lỗi missing phân bố ngẫu nhiên.*/
+
+SELECT
+    order_id,
+    order_purchase_timestamp,
+    order_approved_at,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_status
+FROM staging.olist_orders
+WHERE order_status = 'delivered'
+  AND (
+      order_approved_at IS NULL
+      OR TRIM(order_approved_at) = ''
+  )
+ORDER BY order_purchase_timestamp;
 
