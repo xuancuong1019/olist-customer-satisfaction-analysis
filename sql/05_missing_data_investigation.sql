@@ -344,3 +344,38 @@ FROM staging.olist_orders
 WHERE order_status = 'canceled'
   AND NULLIF(TRIM(order_delivered_customer_date), '') IS NOT NULL
 ORDER BY order_purchase_timestamp;
+
+/* 5. Investigate delivered orders missing customer delivery dates */
+
+SELECT
+    order_id,
+    order_purchase_timestamp,
+    order_approved_at,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_estimated_delivery_date
+FROM staging.olist_orders
+WHERE order_status = 'delivered'
+  AND NULLIF(TRIM(order_delivered_customer_date), '') IS NULL
+ORDER BY order_purchase_timestamp;
+
+/* 6. Check monthly distribution of delivered orders missing customer delivery timestamps */
+
+SELECT
+    LEFT(order_purchase_timestamp, 7) AS purchase_month,
+    COUNT(*) AS missing_orders,
+    SUM(
+        CASE
+            WHEN NULLIF(
+                TRIM(order_delivered_carrier_date), ''
+            ) IS NULL
+            THEN 1 ELSE 0
+        END
+    ) AS missing_carrier_date
+FROM staging.olist_orders
+WHERE order_status = 'delivered'
+  AND NULLIF(
+      TRIM(order_delivered_customer_date), ''
+  ) IS NULL
+GROUP BY LEFT(order_purchase_timestamp, 7)
+ORDER BY purchase_month;
