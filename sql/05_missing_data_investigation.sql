@@ -431,4 +431,19 @@ FROM product_stats;
 
 
 /*product_weight_g, product_length_cm, product_height_cm, product_width_cm*/
+/* 1. Investigate missing values in product dimensions */
+SELECT *
+FROM staging.olist_products
+WHERE product_weight_g IS NULL;
 
+SELECT *
+FROM staging.olist_products
+WHERE product_length_cm IS NULL;
+
+SELECT *
+FROM staging.olist_products
+WHERE product_height_cm IS NULL;
+
+SELECT *
+FROM staging.olist_products
+WHERE product_width_cm IS NULL;
