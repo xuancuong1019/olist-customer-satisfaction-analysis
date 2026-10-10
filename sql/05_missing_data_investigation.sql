@@ -193,12 +193,13 @@ FROM staging.olist_orders
 GROUP BY order_status
 ORDER BY missing_carrier_date DESC;
 
-/*Sau khi kiểm tra tổng các đơn hàng theo trạng thái thì nhận thấy rằng dữ liệu đúng với thự tế khi các đơn
+/*Sau khi kiểm tra tổng các đơn hàng theo trạng thái thì nhận thấy rằng dữ liệu đúng với thực tế khi các đơn
 bị khuyết ngày giao cho đơn vị vận chuyển tập trung ở unavailable, canceled, invoiced và processing. Trong 625 
-đơn hàng bị canceled thì chỉ có 550 đơn bị khuyết, nên kiểm tra lại số đơn hàng này */
+đơn hàng bị canceled thì chỉ có 550 đơn bị khuyết, nên kiểm tra lại 75 đơn hàng không bị miss 
+order_delivered_carrier_date này */
 
-/*Ngoài ra thì hệ thống cũng ghi nhận 2 đơn hàng ở trạng thái delivered bị khuyết, cũng cần kiểm tra 2 đơn
-hàng này*/
+/*Shipped ghi nhận 0 trường hợp missing ngày giao đến đơn vị vận chuyển, điều mà hợp lý. Tuy nhiên ở delivered
+lại xuất hiện 2 trường hợp bị miss cột này, nên cần kiểm tra lại*/
 
 
 SELECT
