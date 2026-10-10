@@ -216,3 +216,10 @@ trong khi kiểm tra bằng filter trong excel thì lại không có missing nà
 
 /*Thực tế thì thật sự có 2 đơn bị miss trong Excel nhưng filter lại không nhận ra*/
 
+/*Sau khi tiến hành kiểm tra 75 đơn hàng bị canceled nhưng vẫn tồn tại ngày giao
+cho đơn vị vận chuyển thì có 1 điều kiện cần phải kiểm tra*/
+
+/*Trường hợp thứ 1: Đơn hàng được giao cho đơn vị vận chuyển nhưng bị hủy thì không thể tồn tại ngày giao đến khách được 
+(thật ra là vẫn tồn tại được giả sử trường hợp đó người mua trả hàng ngay lúc nhận hàng chẳng hạn?)*/
+
+/*Vậy nên sẽ tiến hành kiểm tra các đơn bị hủy và tồn tại 2 cột order_delivered_carrier_date và order_delivered_customer_date*/
