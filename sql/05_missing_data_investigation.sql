@@ -198,6 +198,7 @@ bị khuyết ngày giao cho đơn vị vận chuyển tập trung ở unavailab
 đơn hàng bị canceled thì chỉ có 550 đơn bị khuyết, nên kiểm tra lại 75 đơn hàng không bị miss 
 order_delivered_carrier_date này */
 
+
 /*Shipped ghi nhận 0 trường hợp missing ngày giao đến đơn vị vận chuyển, điều mà hợp lý. Tuy nhiên ở delivered
 lại xuất hiện 2 trường hợp bị miss cột này, nên cần kiểm tra lại*/
 
@@ -211,6 +212,11 @@ WHERE order_status = 'delivered'
       order_delivered_carrier_date IS NULL
       OR TRIM(order_delivered_carrier_date) = ''
   );
+
+/*Trong quá trình điều tra missing ở order_delivered_carrier_date thì lại phát hiện một bất thường nữa. Như cái giả thuyết trước
+đó về order_approved_at, tôi cho rằng chỉ khi họ thanh toán thì cột này mới xuất hiện. Nhưng sau khi xem qua các đơn hàng bị canceled
+thì nhận thấy rằng có 75 đơn hàng bị canceled nhưng vẫn tồn tại ngày giao cho đơn vị vận chuyển. Điều này có nghĩa là
+nghĩa là mâu thuẫn với ái giả thuyết trên. Phải quay lại tìm nguyên nhân missing của cột order_approved_at*/
 
 /*Một phát hiện ngoài lề là trong SQL kiểm tra có 2 đơn hàng delivered bị khuyết ngày giao cho đơn vị vận chuyển
 trong khi kiểm tra bằng filter trong excel thì lại không có missing nào*/
