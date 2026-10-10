@@ -239,3 +239,31 @@ Dựa trên kết quả điều tra, quyết định xử lý như sau:
 5. **Giới hạn sử dụng khi tính KPI:** Chỉ tính thời gian giao hàng thực tế trên các đơn có timestamp hợp lệ. Không sử dụng ngày giao dự kiến làm ngày giao thực tế; cần ghi rõ phạm vi và số lượng bản ghi bị loại khỏi phép tính nếu có.
 
 **Kết luận cuối cùng:** Không phải mọi giá trị missing của `order_delivered_customer_date` đều thể hiện lỗi dữ liệu. Nhóm `shipped` có thể được giải thích bằng trạng thái giao hàng chưa được ghi nhận hoàn tất, trong khi 8 đơn `delivered` bị thiếu timestamp và 6 đơn `canceled` vẫn có ngày giao đến khách cần được ghi nhận riêng. Do dữ liệu công khai không cung cấp đủ thông tin để xác minh nguyên nhân, dự án giữ nguyên dữ liệu gốc, không tự suy đoán giá trị thay thế và chỉ loại các bản ghi khỏi những phép tính mà timestamp bị thiếu làm ảnh hưởng đến tính chính xác.
+
+
+## 3. Missing Values Report — `olist_products`
+
+### 3.1 Phát hiện
+
+Bốn cột `product_category_name`, `product_name_lenght`,
+`product_description_lenght` và `product_photos_qty`
+cùng bị thiếu trên **610 sản phẩm**.
+
+### 3.2 Kiểm tra và nhận định
+
+- Đã xác nhận cả 4 cột đều missing đồng thời trên 610 sản phẩm.
+- **100% sản phẩm** trong `staging.olist_products` đều xuất hiện trong bảng `staging.olist_order_items`.
+- Nguyên nhân gốc chưa xác định.
+
+### 3.3 Quyết định xử lý
+
+- Giữ các giá trị missing dưới dạng `NULL` trong cleaned layer.
+- Không tự điền hoặc suy đoán giá trị.
+- Không loại bỏ sản phẩm chỉ vì thiếu metadata.
+- Giữ nguyên dữ liệu gốc trong staging.
+
+### 3.4 Kết luận
+
+Ghi nhận **610 sản phẩm thiếu đồng thời bốn trường metadata**.
+
+**Hướng xử lý:** giữ `NULL`, không tự điền và không xóa bản ghi.
