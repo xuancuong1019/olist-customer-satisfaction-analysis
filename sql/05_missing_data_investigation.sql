@@ -124,7 +124,6 @@ ORDER BY order_purchase_timestamp, order_id;
 
 
 /*Investigating missing values in order_delivered_carrier_date*/
-
 /* 1. Missing values by order status */
 
 SELECT
@@ -249,9 +248,99 @@ ORDER BY days_purchase_to_carrier, order_id;
 
 
 
-
-
-
 /*Investigating order_delivered_customer_date*/
+/* 1. Missing values in order_delivered_customer_date by order status */
 
+SELECT
+    order_status,
+    COUNT(*) AS total_orders,
+    SUM(
+        CASE
+            WHEN NULLIF(TRIM(order_delivered_customer_date), '') IS NULL
+            THEN 1
+            ELSE 0
+        END
+    ) AS missing_orders,
+    CAST(
+        100.0 * SUM(
+            CASE
+                WHEN NULLIF(TRIM(order_delivered_customer_date), '') IS NULL
+                THEN 1
+                ELSE 0
+            END
+        ) / NULLIF(COUNT(*), 0)
+        AS DECIMAL(6, 2)
+    ) AS missing_rate_pct
+FROM staging.olist_orders
+GROUP BY order_status
+ORDER BY missing_orders DESC;
 
+/* 2. Payment method distribution for shipped orders */
+
+SELECT
+    p.payment_type,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    CAST(
+        100.0 * COUNT(DISTINCT o.order_id)
+        / NULLIF(
+            (
+                SELECT COUNT(DISTINCT order_id)
+                FROM staging.olist_orders
+                WHERE order_status = 'shipped'
+            ),
+            0
+        )
+        AS DECIMAL(6, 2)
+    ) AS percentage
+FROM staging.olist_orders AS o
+JOIN staging.olist_order_payments AS p
+    ON o.order_id = p.order_id
+WHERE o.order_status = 'shipped'
+GROUP BY p.payment_type
+ORDER BY total_orders DESC;
+
+/* 3. Inspect all timestamps of shipped orders */
+
+SELECT
+    order_id,
+    order_purchase_timestamp,
+    order_approved_at,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_estimated_delivery_date
+FROM staging.olist_orders
+WHERE order_status = 'shipped'
+ORDER BY order_purchase_timestamp;
+
+/* 4. Investigating canceled orders with customer delivery dates */
+
+SELECT
+    order_id,
+    order_purchase_timestamp,
+    order_approved_at,
+    order_delivered_carrier_date,
+    order_delivered_customer_date,
+    order_estimated_delivery_date,
+
+    DATEDIFF(
+        DAY,
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_purchase_timestamp), '')),
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_delivered_carrier_date), ''))
+    ) AS days_purchase_to_carrier,
+
+    DATEDIFF(
+        DAY,
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_delivered_carrier_date), '')),
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_delivered_customer_date), ''))
+    ) AS days_carrier_to_customer,
+
+    DATEDIFF(
+        DAY,
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_purchase_timestamp), '')),
+        TRY_CONVERT(datetime2, NULLIF(TRIM(order_delivered_customer_date), ''))
+    ) AS days_purchase_to_customer
+
+FROM staging.olist_orders
+WHERE order_status = 'canceled'
+  AND NULLIF(TRIM(order_delivered_customer_date), '') IS NOT NULL
+ORDER BY order_purchase_timestamp;
