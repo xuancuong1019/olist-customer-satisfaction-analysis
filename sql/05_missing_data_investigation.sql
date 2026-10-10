@@ -379,3 +379,56 @@ WHERE order_status = 'delivered'
   ) IS NULL
 GROUP BY LEFT(order_purchase_timestamp, 7)
 ORDER BY purchase_month;
+
+
+/* product_category_name, product_name_lenght, product_description_lenght, product_photos_qty*/
+
+/* 1. Investigate missing values in product attributes */
+WITH product_stats AS (
+    SELECT
+        p.product_id,
+        CASE
+            WHEN NULLIF(TRIM(p.product_category_name), '') IS NULL
+             AND NULLIF(TRIM(p.product_name_lenght), '') IS NULL
+             AND NULLIF(TRIM(p.product_description_lenght), '') IS NULL
+             AND NULLIF(TRIM(p.product_photos_qty), '') IS NULL
+            THEN 1
+            ELSE 0
+        END AS missing_all_4,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM staging.olist_order_items AS oi
+                WHERE oi.product_id = p.product_id
+            )
+            THEN 1
+            ELSE 0
+        END AS in_orders
+    FROM staging.olist_products AS p
+)
+SELECT
+    COUNT(*) AS total_products,
+
+    SUM(in_orders) AS products_in_orders,
+    CAST(
+        100.0 * SUM(in_orders) / NULLIF(COUNT(*), 0)
+        AS DECIMAL(5, 2)
+    ) AS pct_products_in_orders,
+
+    SUM(missing_all_4) AS products_missing_all_4,
+    SUM(CASE WHEN missing_all_4 = 1 AND in_orders = 1
+             THEN 1 ELSE 0 END) AS missing_products_in_orders,
+
+    CAST(
+        100.0 * SUM(CASE WHEN missing_all_4 = 1 AND in_orders = 1
+                         THEN 1 ELSE 0 END)
+        / NULLIF(SUM(missing_all_4), 0)
+        AS DECIMAL(5, 2)
+    ) AS pct_missing_products_in_orders
+
+FROM product_stats;
+
+
+
+/*product_weight_g, product_length_cm, product_height_cm, product_width_cm*/
+
