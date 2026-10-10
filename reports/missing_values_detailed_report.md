@@ -1,131 +1,241 @@
-# Báo cáo phân tích chi tiết giá trị thiếu
+## 1. Phân tích missing values: `order_approved_at`
 
-**Dự án:** Olist E-Commerce Dataset  
-**Phạm vi:** Kiểm tra missing trong dữ liệu CSV thô, tập trung vào phân tích chi tiết trong notebook `01_sanity_check_cleaning.ipynb`  
-**Nguồn:** 9 bảng CSV trong `data/raw/`; đơn hàng thuộc giai đoạn 2016–2018.
+### 1.1. Phát hiện ban đầu
 
-## 1. Mục tiêu và cách kiểm tra
+Trong quá trình kiểm tra chất lượng dữ liệu của bảng `staging.olist_orders`, phát hiện **14 đơn hàng có trạng thái `delivered` nhưng bị thiếu giá trị `order_approved_at`**.
 
-Phân tích nhằm xác định cột nào có dữ liệu thiếu, đo quy mô và tỷ lệ thiếu, sau đó kiểm tra mối liên hệ với trạng thái đơn hàng hoặc các trường liên quan để phân biệt trường hợp hợp lý theo nghiệp vụ với trường hợp cần rà soát.
+Đây là trường hợp cần được kiểm tra thêm vì các đơn hàng đã hoàn tất giao hàng nhưng không có thời điểm phê duyệt đơn hàng được ghi nhận. Tuy nhiên, chưa thể kết luận ngay rằng đây là lỗi dữ liệu, bởi nguyên nhân thiếu timestamp có thể liên quan đến quy trình nghiệp vụ hoặc cách dữ liệu được ghi nhận.
 
-Notebook đọc CSV theo từng chunk, xem `NaN` và chuỗi rỗng/space là giá trị thiếu, rồi tổng hợp số lượng và tỷ lệ thiếu theo cột. Với ngày trong bảng đơn hàng, các dòng thiếu được đối chiếu với `order_status`; riêng ngày giao cho đơn vị vận chuyển còn được kiểm tra logic với ngày giao khách hàng. Với sản phẩm thiếu metadata, phân tích lần theo `product_id` qua bảng chi tiết đơn hàng đến trạng thái đơn.
+### 1.2. Kiểm chứng theo phương thức thanh toán
 
-## 2. Tóm tắt kết quả
+Để xác định liệu tình trạng missing có liên quan đến một phương thức thanh toán cụ thể hay không, tiến hành so sánh tỷ lệ missing `order_approved_at` giữa các phương thức thanh toán của những đơn hàng có trạng thái `delivered`.
 
-Các cột có missing tập trung ở ba nhóm: nội dung đánh giá, mốc thời gian xử lý đơn hàng và metadata sản phẩm. Các bảng khách hàng, địa lý, chi tiết đơn hàng, thanh toán, người bán và bảng dịch tên danh mục không ghi nhận missing ở các cột được kiểm tra.
+Kết quả cho thấy:
 
-| Bảng | Cột | Thiếu | Tổng dòng | Tỷ lệ |
-|---|---|---:|---:|---:|
-| `olist_order_reviews` | `review_comment_message` | 58.274 | 99.224 | 58,73% |
-| `olist_order_reviews` | `review_comment_title` | 87.658 | 99.224 | 88,34% |
-| `olist_orders` | `order_approved_at` | 160 | 99.441 | 0,16% |
-| `olist_orders` | `order_delivered_carrier_date` | 1.783 | 99.441 | 1,79% |
-| `olist_orders` | `order_delivered_customer_date` | 2.965 | 99.441 | 2,98% |
-| `olist_products` | `product_category_name` | 610 | 32.951 | 1,85% |
-| `olist_products` | `product_name_lenght` | 610 | 32.951 | 1,85% |
-| `olist_products` | `product_description_lenght` | 610 | 32.951 | 1,85% |
-| `olist_products` | `product_photos_qty` | 610 | 32.951 | 1,85% |
-| `olist_products` | `product_weight_g`, `product_length_cm`, `product_height_cm`, `product_width_cm` | 2 mỗi cột | 32.951 | 0,01% |
+- Cả 14 đơn hàng bị thiếu `order_approved_at` đều sử dụng phương thức thanh toán `boleto`.
+- Trong tổng số 19.191 đơn hàng `delivered` sử dụng `boleto`, có 14 đơn bị thiếu timestamp, tương đương khoảng **0,073%**.
+- Các nhóm phương thức thanh toán còn lại không ghi nhận trường hợp missing trong kết quả kiểm tra.
 
-Các giá trị sản phẩm được đối chiếu lại trực tiếp từ CSV. Bốn cột metadata mô tả cùng thiếu trên chính xác 610 sản phẩm; bốn thuộc tính kích thước cùng thiếu trên 2 sản phẩm.
+Kết quả này cho thấy các trường hợp missing được phát hiện tập trung ở nhóm đơn hàng sử dụng `boleto`. Tuy nhiên, do số lượng trường hợp rất nhỏ so với tổng số đơn hàng trong nhóm, chưa đủ cơ sở để kết luận rằng phương thức thanh toán `boleto` là nguyên nhân trực tiếp.
 
-## 3. Phân tích chi tiết
+### 1.3. Kiểm tra theo thời gian đặt hàng
 
-### 3.1. Ngày duyệt đơn hàng — `order_approved_at`
+Tiếp tục đối chiếu `order_purchase_timestamp` để xác định liệu các trường hợp missing có tập trung vào một số thời điểm nhất định hay không.
 
-Có 160/99.441 đơn hàng thiếu ngày duyệt (0,16%). Phân bố trạng thái:
+Kết quả cho thấy 14 đơn hàng được đặt vào các ngày:
 
-| Trạng thái | Số đơn |
-|---|---:|
-| `canceled` | 141 |
-| `delivered` | 14 |
-| `created` | 5 |
+- **19/01/2017:** 2 đơn hàng.
+- **17–19/02/2017:** 12 đơn hàng.
 
-Phần lớn missing gắn với đơn đã hủy, phù hợp với khả năng đơn chưa hoàn tất bước duyệt. Tuy nhiên, 14 đơn `delivered` vẫn thiếu ngày duyệt; đây là nhóm không khớp kỳ vọng về trình tự nghiệp vụ và cần được xem xét riêng. Không nên điền ngày giả định cho các dòng này.
+Trong nhóm đơn `boleto` được kiểm tra ở các ngày 17–19/02/2017, tỷ lệ missing ghi nhận như sau:
 
-### 3.2. Ngày bàn giao cho đơn vị vận chuyển — `order_delivered_carrier_date`
+| Ngày đặt hàng | Số đơn thiếu | Tổng đơn boleto | Tỷ lệ missing |
+|---|---:|---:|---:|
+| 17/02/2017 | 3 | 8 | 37,5% |
+| 18/02/2017 | 8 | 10 | 80% |
+| 19/02/2017 | 1 | 10 | 10% |
 
-Có 1.783/99.441 đơn thiếu ngày bàn giao (1,79%). Trạng thái của các đơn này:
+Đáng chú ý, tỷ lệ missing cao nhất xuất hiện vào ngày 18/02/2017. Điều này cho thấy các trường hợp thiếu timestamp không phân bố đồng đều theo ngày đặt hàng trong nhóm được kiểm tra.
 
-| Trạng thái | Số đơn |
-|---|---:|
-| `unavailable` | 609 |
-| `canceled` | 550 |
-| `invoiced` | 314 |
-| `processing` | 301 |
-| `created` | 5 |
-| `approved` | 2 |
-| `delivered` | 2 |
+Tuy nhiên, kết quả trên chỉ phản ánh sự tập trung của các trường hợp missing theo thời gian. Dữ liệu hiện có chưa đủ để xác định liệu đây là hệ quả của quy trình thanh toán `boleto`, lỗi hệ thống trong một khoảng thời gian hay một nguyên nhân khác.
 
-Kiểm tra giao thoa cho thấy 1.782/1.783 đơn thiếu ngày bàn giao cũng thiếu ngày giao tới khách hàng. Một đơn còn có ngày giao khách hàng nhưng thiếu ngày bàn giao cho vận chuyển. Về trình tự thời gian, trường hợp đơn lẻ này không hợp lý và cần kiểm tra nguồn dữ liệu hoặc tính nhất quán timestamp; không nên tự suy ra ngày bàn giao.
+### 1.4. Đối chiếu các mốc thời gian giao hàng
 
-Các trạng thái `canceled`, `unavailable`, `created`, `approved`, `processing` giải thích phần lớn trường hợp chưa có mốc bàn giao. Nhưng `invoiced` và `delivered` cần được phân tích thêm vì biểu thị các giai đoạn tiến xa hơn trong quy trình.
+Để kiểm tra liệu những đơn hàng này có thực sự được xử lý và giao hàng hay không, tiếp tục đối chiếu các cột thời gian liên quan.
 
-### 3.3. Ngày giao tới khách — `order_delivered_customer_date`
+Kết quả cho thấy:
 
-Có 2.965/99.441 đơn thiếu ngày giao khách hàng (2,98%). Phân bố trạng thái:
+- Cả 14 đơn hàng đều có `order_delivered_carrier_date` và `order_delivered_customer_date`.
+- Khoảng thời gian từ lúc đặt hàng đến khi bàn giao cho đơn vị vận chuyển dao động khoảng 4–8 ngày.
+- Trong 14 đơn hàng, 12 đơn được bàn giao cho đơn vị vận chuyển vào ngày 22 hoặc 23/02/2017; hai đơn còn lại có ngày bàn giao là 25/01/2017 và 27/01/2017.
 
-| Trạng thái | Số đơn |
-|---|---:|
-| `shipped` | 1.107 |
-| `canceled` | 619 |
-| `unavailable` | 609 |
-| `invoiced` | 314 |
-| `processing` | 301 |
-| `delivered` | 8 |
-| `created` | 5 |
-| `approved` | 2 |
+Những thông tin này cho thấy các đơn hàng đều có các mốc thời gian ghi nhận quá trình vận chuyển và giao hàng, mặc dù thiếu thời điểm phê duyệt.
 
-Phần lớn trường hợp thuộc đơn chưa giao xong hoặc bị hủy/không khả dụng, nên thiếu ngày giao thực tế có thể hợp lý. Có 8 đơn mang trạng thái `delivered` nhưng vẫn thiếu timestamp giao khách; đây là nhóm cần kiểm tra chất lượng dữ liệu. Trạng thái `shipped` chưa tự nó chứng minh lỗi: đơn có thể đang trên đường tại thời điểm dữ liệu ghi nhận.
+Tuy nhiên, sự tồn tại của các mốc thời gian phía sau không giúp xác định chính xác thời điểm phê duyệt bị thiếu hoặc lý do giá trị này không được ghi nhận.
 
-### 3.4. Metadata mô tả sản phẩm
+### 1.5. Kết luận và quyết định xử lý
 
-Có 610/32.951 sản phẩm (1,85%) thiếu đồng thời cả bốn trường `product_category_name`, `product_name_lenght`, `product_description_lenght`, `product_photos_qty`. Như vậy đây là một nhóm sản phẩm thiếu metadata có tính đồng thời, thay vì bốn nhóm thiếu độc lập.
+Qua các bước kiểm tra, có thể xác nhận rằng 14 đơn hàng `delivered` bị thiếu `order_approved_at` đều thuộc nhóm thanh toán `boleto`, đồng thời tập trung vào một số ngày đặt hàng nhất định. Mặc dù đã đối chiếu phương thức thanh toán và các mốc thời gian liên quan, **chưa đủ bằng chứng để xác định nguyên nhân gốc rễ của các trường hợp missing**.
 
-Lần theo các sản phẩm này trong `olist_order_items` cho thấy chúng xuất hiện trong 1.451 đơn hàng. Phân bố trạng thái:
+Do đây là bộ dữ liệu công khai và không có thêm thông tin về nhật ký hệ thống hoặc quy trình xử lý nội bộ, việc tiếp tục điều tra có thể không đem lại kết luận đáng tin cậy hơn.
 
-| Trạng thái đơn chứa sản phẩm thiếu metadata | Số đơn | Tỷ lệ trong 1.451 đơn |
+Vì vậy, quyết định xử lý như sau:
+
+1. **Giữ nguyên giá trị missing:** Không tự điền `order_approved_at` cho 14 đơn hàng vì không có nguồn đáng tin cậy để xác định thời điểm phê duyệt thực tế.
+2. **Chuẩn hóa dữ liệu:** Chuyển các giá trị chuỗi rỗng hoặc chỉ chứa khoảng trắng thành `NULL` trong lớp dữ liệu đã làm sạch, đồng thời giữ nguyên dữ liệu staging.
+3. **Ghi nhận các bản ghi cần theo dõi:** Lưu danh sách 14 `order_id` cùng thông tin về cột bị thiếu và phát hiện liên quan trong nhật ký chất lượng dữ liệu.
+4. **Giới hạn sử dụng trong phân tích:** Không sử dụng những bản ghi thiếu timestamp để tính toán các chỉ số bắt buộc phải có thời điểm phê duyệt hợp lệ. Các bản ghi vẫn được giữ lại trong những phân tích khác mà giá trị thiếu này không cản trở tính chính xác.
+
+**Kết luận cuối cùng:** Các trường hợp missing này được ghi nhận là một vấn đề chất lượng dữ liệu chưa xác định được nguyên nhân. Thay vì suy đoán hoặc tự tạo giá trị thay thế, dự án giữ nguyên thông tin chưa biết và ghi lại quyết định xử lý để đảm bảo tính minh bạch, khả năng kiểm tra và độ tin cậy của những phân tích tiếp theo.
+
+
+
+## 2. Phân tích missing values: `order_delivered_carrier_date`
+
+### 2.1. Phát hiện ban đầu
+
+Tiến hành thống kê số lượng giá trị missing của `order_delivered_carrier_date` theo `order_status` trong bảng `staging.olist_orders`.
+
+Kết quả cho thấy các giá trị missing xuất hiện chủ yếu ở những trạng thái như `unavailable`, `canceled`, `invoiced` và `processing`. Đây là những trạng thái mà đơn hàng có thể chưa hoàn tất quá trình vận chuyển hoặc không đi đến bước bàn giao cho đơn vị vận chuyển.
+
+Tuy nhiên, không nên mặc định rằng tất cả các trường hợp missing đều hợp lý chỉ dựa trên trạng thái đơn hàng. Cần tiếp tục kiểm tra những trường hợp có dấu hiệu không nhất quán với các mốc thời gian được ghi nhận.
+
+Đáng chú ý, trong tổng số 625 đơn hàng có trạng thái `canceled`, có 550 đơn bị thiếu `order_delivered_carrier_date`, nhưng vẫn còn **75 đơn có thông tin ngày bàn giao cho đơn vị vận chuyển**. Đây là nhóm cần được kiểm tra thêm.
+
+### 2.2. Kiểm tra mối liên hệ với phương thức thanh toán
+
+Để xác định liệu 75 đơn hàng `canceled` có ngày bàn giao có liên quan đến một phương thức thanh toán cụ thể hay không, tiến hành đối chiếu với bảng `staging.olist_order_payments`.
+
+Kết quả ban đầu cho thấy `credit_card` là phương thức thanh toán phổ biến nhất trong nhóm này. Tuy nhiên, khi so sánh với các đơn hàng `delivered`, phương thức `credit_card` cũng chiếm tỷ trọng lớn.
+
+Do đó, việc `credit_card` xuất hiện nhiều trong nhóm đơn bất thường chưa phải là bằng chứng cho thấy phương thức thanh toán này có liên quan đến vấn đề dữ liệu. Kết quả có thể đơn giản phản ánh mức độ phổ biến của phương thức thanh toán này trong tập dữ liệu.
+
+**Kết luận:** Chưa tìm thấy bằng chứng đủ thuyết phục cho thấy phương thức thanh toán là yếu tố giải thích tình trạng 75 đơn `canceled` vẫn có `order_delivered_carrier_date`. Không tiếp tục đào sâu theo hướng này nếu chưa xuất hiện thêm giả thuyết hoặc thông tin mới.
+
+### 2.3. Kiểm tra phân bố thời gian bàn giao
+
+Tiếp tục kiểm tra thời điểm `order_delivered_carrier_date` của 75 đơn hàng để xác định liệu chúng có tập trung vào một khoảng thời gian bất thường hay không.
+
+Theo kết quả truy vấn, các mốc thời gian bàn giao được ghi nhận tập trung vào tháng 10/2016 và quý I/2018, trong khi không ghi nhận trường hợp nào thuộc năm 2017.
+
+Phân bố thời gian này là một đặc điểm đáng lưu ý của nhóm dữ liệu. Tuy nhiên, chỉ riêng việc các mốc thời gian tập trung vào một số khoảng thời gian nhất định chưa đủ để xác định nguyên nhân. Chưa thể kết luận đây là lỗi hệ thống, vấn đề đồng bộ trạng thái đơn hàng hay một quy trình nghiệp vụ đặc biệt.
+
+### 2.4. Đối chiếu ngày đặt hàng và ngày bàn giao
+
+Để đánh giá tính hợp lý của các mốc thời gian, tiếp tục so sánh `order_purchase_timestamp` với `order_delivered_carrier_date`.
+
+Kết quả cho thấy khoảng cách giữa ngày đặt hàng và ngày bàn giao chủ yếu nằm trong khoảng 1–6 ngày. Có hai đơn hàng có ngày đặt hàng và ngày bàn giao trùng nhau theo ngày lịch.
+
+Những trường hợp này chưa đủ để khẳng định dữ liệu sai lệch. Việc đặt hàng và bàn giao trong cùng ngày có thể xảy ra, nhưng cần xét đến giờ cụ thể và quy trình xử lý thực tế mới có thể đánh giá chính xác hơn.
+
+Do đó, kết quả kiểm tra này chưa cung cấp bằng chứng rõ ràng để xác định nguyên nhân của 75 đơn hàng bất thường.
+
+### 2.5. Đối chiếu với ngày giao hàng cho khách
+
+Tiếp tục kiểm tra `order_delivered_customer_date` trong nhóm 75 đơn hàng `canceled` có `order_delivered_carrier_date`.
+
+Kết quả cho thấy:
+
+- **69 đơn hàng** không có `order_delivered_customer_date`.
+- **6 đơn hàng** có cả `order_delivered_carrier_date` và `order_delivered_customer_date`, mặc dù trạng thái hiện tại là `canceled`.
+
+Đây là phát hiện đáng chú ý hơn vì những đơn hàng này có dấu thời gian ghi nhận cả quá trình bàn giao và giao hàng đến khách, trong khi trạng thái đơn hàng vẫn là `canceled`.
+
+Một số khả năng có thể được đặt ra, chẳng hạn đơn bị hủy sau khi đã bàn giao, trạng thái đơn hàng chưa phản ánh đầy đủ diễn biến thực tế hoặc dữ liệu được ghi nhận không nhất quán. Tuy nhiên, dữ liệu hiện có chưa đủ để xác minh khả năng nào đã xảy ra.
+
+Sáu đơn hàng này sẽ được ghi nhận để tiếp tục đối chiếu khi phân tích `order_delivered_customer_date`, thay vì cố gắng kết luận nguyên nhân ngay trong phần kiểm tra cột hiện tại.
+
+### 2.6. Kiểm tra độ đầy đủ của dữ liệu thanh toán và đối chiếu với Excel
+
+Trong quá trình điều tra, ban đầu có giả thuyết rằng chỉ những đơn hàng đã thanh toán mới xuất hiện thông tin `order_delivered_carrier_date`. Tuy nhiên, việc đối chiếu giữa bảng đơn hàng và bảng thanh toán cho thấy giả thuyết này chưa được chứng minh; thông tin thanh toán không đủ để giải thích toàn bộ cách các mốc thời gian vận chuyển được ghi nhận.
+
+Ngoài ra, quá trình kiểm tra bằng SQL phát hiện hai đơn hàng `delivered` bị thiếu `order_delivered_carrier_date`. Việc lọc dữ liệu trong Excel ban đầu không giúp nhận diện các trường hợp này, nhưng kiểm tra lại cho thấy cả hai thực sự bị thiếu giá trị.
+
+Phát hiện này nhấn mạnh sự cần thiết phải kiểm tra dữ liệu một cách nhất quán giữa các công cụ, đặc biệt khi dữ liệu có thể chứa `NULL`, chuỗi rỗng hoặc giá trị chỉ gồm khoảng trắng. Trong lớp dữ liệu đã làm sạch, các dạng giá trị trống này cần được chuẩn hóa để thống kê missing chính xác hơn.
+
+### 2.7. Kết luận và quyết định xử lý
+
+Qua quá trình điều tra, nhận diện được hai vấn đề chính:
+
+1. Phần lớn các giá trị missing của `order_delivered_carrier_date` tập trung ở những trạng thái mà đơn hàng có thể chưa đi đến bước bàn giao cho đơn vị vận chuyển. Tuy nhiên, cần xem xét theo từng trạng thái thay vì mặc định tất cả trường hợp đều hợp lý.
+2. Có 75 đơn hàng `canceled` vẫn có ngày bàn giao, trong đó 6 đơn hàng còn có cả ngày giao đến khách. Các kiểm tra bổ sung chưa đủ để xác định nguyên nhân gốc rễ.
+
+Đối với hai đơn hàng `delivered` bị thiếu `order_delivered_carrier_date`, đây cũng là những trường hợp cần được ghi nhận như một vấn đề chất lượng dữ liệu chưa có lời giải thích chắc chắn.
+
+Quyết định xử lý:
+
+- **Không tự điền ngày bàn giao còn thiếu:** Không có căn cứ đáng tin cậy để xác định giá trị thực tế của các timestamp bị thiếu.
+- **Chuẩn hóa các giá trị trống trong lớp dữ liệu đã làm sạch:** Chuyển chuỗi rỗng hoặc chuỗi chỉ chứa khoảng trắng thành `NULL`, đồng thời giữ nguyên dữ liệu staging.
+- **Không tự ý xóa timestamp hoặc thay đổi `order_status`:** Giữ nguyên các giá trị hiện có của 75 đơn hàng bất thường và ghi nhận để đối chiếu trong những bước phân tích tiếp theo.
+- **Tiếp tục theo dõi 6 đơn hàng có ngày giao đến khách:** Đối chiếu với kết quả phân tích `order_delivered_customer_date` để đánh giá tính nhất quán giữa trạng thái đơn hàng và các mốc thời gian.
+- **Sử dụng dữ liệu có chọn lọc khi tính KPI:** Chỉ sử dụng những bản ghi có đủ timestamp hợp lệ cho chỉ số đang tính; ghi rõ các điều kiện lọc và số bản ghi bị loại khỏi phép tính nếu có.
+
+**Kết luận cuối cùng:** Không có đủ bằng chứng để xác định nguyên nhân của các trường hợp bất thường liên quan đến `order_delivered_carrier_date`. Vì vậy, dự án giữ nguyên dữ liệu gốc, chuẩn hóa giá trị missing trong lớp dữ liệu đã làm sạch và ghi nhận những trường hợp cần theo dõi. Việc không tự suy đoán timestamp hoặc thay đổi trạng thái đơn hàng giúp đảm bảo tính minh bạch và độ tin cậy của các phân tích tiếp theo.
+
+## 3. Phân tích missing values: `order_delivered_customer_date`
+
+### 3.1. Phát hiện ban đầu
+
+Trong quá trình kiểm tra chất lượng dữ liệu của bảng `staging.olist_orders`, phát hiện ba trường hợp đáng chú ý liên quan đến `order_delivered_customer_date`:
+
+- **`shipped`:** 100% đơn hàng bị thiếu ngày giao đến khách.
+- **`canceled`:** Có 6 đơn hàng vẫn ghi nhận ngày giao đến khách.
+- **`delivered`:** Có 8 đơn hàng bị thiếu ngày giao đến khách.
+
+Các trường hợp này cần được đánh giá riêng vì missing values và dữ liệu không nhất quán với trạng thái đơn hàng là hai vấn đề khác nhau.
+
+### 3.2. Phân tích các đơn hàng `shipped`
+
+Kết quả thống kê cho thấy toàn bộ đơn hàng có trạng thái `shipped` đều thiếu `order_delivered_customer_date`.
+
+Tiến hành kiểm tra phương thức thanh toán và các mốc thời gian còn lại, bao gồm thời điểm đặt hàng, phê duyệt và bàn giao cho đơn vị vận chuyển. Kết quả không cho thấy dấu hiệu bất thường rõ ràng trong các thông tin thời gian đã được ghi nhận.
+
+Việc thiếu ngày giao đến khách ở nhóm này phù hợp với trạng thái `shipped`: đơn hàng đã được gửi đi nhưng chưa được ghi nhận là đã giao đến khách. Tuy nhiên, trạng thái này không cho biết vị trí thực tế của kiện hàng hoặc liệu việc giao hàng có hoàn tất sau đó hay không.
+
+**Kết luận:** Các giá trị missing ở nhóm `shipped` được xem là phù hợp với ngữ cảnh nghiệp vụ hiện có. Không cần tự điền ngày giao hàng hoặc tiếp tục điều tra sâu nếu không xuất hiện thêm dấu hiệu bất thường.
+
+### 3.3. Phân tích các đơn hàng `canceled` có ngày giao đến khách
+
+Phát hiện 6 đơn hàng có trạng thái `canceled` nhưng vẫn tồn tại `order_delivered_customer_date`. Để đánh giá tính hợp lý của các bản ghi, tiến hành đối chiếu trình tự thời gian giữa thời điểm đặt hàng, phê duyệt, bàn giao cho đơn vị vận chuyển, giao đến khách và ngày giao dự kiến.
+
+Kết quả kiểm tra cho thấy:
+
+- Cả 6 đơn hàng đều có trình tự timestamp hợp lý: đặt hàng trước bàn giao và bàn giao trước ngày giao đến khách.
+- Khoảng thời gian từ lúc đặt hàng đến lúc bàn giao dao động từ 1 đến 22 ngày.
+- Khoảng thời gian từ lúc bàn giao đến lúc giao đến khách dao động từ 3 đến 29 ngày.
+- Có 5 đơn hàng được ghi nhận giao trước ngày dự kiến; 1 đơn được giao sau ngày dự kiến 12 ngày.
+- Năm đơn có các mốc thời gian trong tháng 10–11/2016, trong khi đơn còn lại nằm trong tháng 2–3/2018.
+
+Mặc dù trình tự timestamp không có dấu hiệu đảo ngược, việc các đơn hàng có ngày giao đến khách nhưng trạng thái hiện tại là `canceled` vẫn tạo ra sự không nhất quán.
+
+Một số khả năng có thể được đặt ra, chẳng hạn trạng thái đơn hàng không phản ánh đầy đủ diễn biến thực tế hoặc đơn hàng phát sinh vấn đề sau khi giao. Tuy nhiên, dataset không cung cấp lịch sử thay đổi trạng thái và thời điểm hủy đơn, nên chưa thể xác định nguyên nhân chính xác.
+
+**Kết luận:** Đây là 6 trường hợp không nhất quán giữa `order_status` và các mốc thời gian giao hàng, không phải các trường hợp missing. Giữ nguyên timestamp và trạng thái hiện có, đồng thời ghi nhận các `order_id` này để theo dõi trong nhật ký chất lượng dữ liệu.
+
+### 3.4. Phân tích các đơn hàng `delivered` bị thiếu ngày giao đến khách
+
+Phát hiện 8 đơn hàng có trạng thái `delivered` nhưng bị thiếu `order_delivered_customer_date`. Đây là nhóm cần chú ý vì dữ liệu ghi nhận đơn hàng đã được giao đến khách nhưng không có timestamp tương ứng để xác định thời điểm giao hàng thực tế.
+
+Tiến hành đối chiếu các mốc thời gian liên quan và kiểm tra phân bố theo tháng đặt hàng.
+
+Kết quả cho thấy:
+
+| Tháng đặt hàng | Số đơn thiếu ngày giao đến khách | Số đơn đồng thời thiếu ngày bàn giao |
 |---|---:|---:|
-| `delivered` | 1.392 | 95,93% |
-| `shipped` | 24 | 1,65% |
-| `canceled` | 14 | 0,96% |
-| `processing` | 13 | 0,90% |
-| `invoiced` | 8 | 0,55% |
+| 05/2017 | 1 | 1 |
+| 11/2017 | 1 | 0 |
+| 06/2018 | 3 | 0 |
+| 07/2018 | 3 | 0 |
+| **Tổng cộng** | **8** | **1** |
 
-Sản phẩm thiếu metadata vẫn xuất hiện phổ biến trong các đơn đã giao. Điều này cho thấy missing làm giảm độ đầy đủ của phân tích theo danh mục/mô tả sản phẩm, nhưng không ngăn việc ghi nhận sản phẩm trong giao dịch. Không nên xóa các đơn hoặc sản phẩm này khỏi toàn bộ phân tích; tùy mục tiêu, có thể giữ nhãn thiếu/`unknown` khi phân tích danh mục, hoặc loại khỏi các phân tích cần metadata mô tả đầy đủ.
+Trong 8 đơn hàng:
 
-### 3.5. Kích thước và trọng lượng sản phẩm
+- **7 đơn** có `order_delivered_carrier_date` nhưng thiếu `order_delivered_customer_date`.
+- **1 đơn** thiếu cả ngày bàn giao cho đơn vị vận chuyển và ngày giao đến khách.
+- **6/8 đơn** được đặt trong tháng 06–07/2018.
 
-Các trường `product_weight_g`, `product_length_cm`, `product_height_cm`, `product_width_cm` cùng thiếu ở 2 sản phẩm (0,01% mỗi cột). Quy mô rất nhỏ, nhưng đây là thuộc tính cần thiết cho một số phân tích logistics và thể tích. Nên giữ missing trong dữ liệu nguồn sạch và xử lý theo phạm vi phân tích; nếu cần ước lượng, chỉ cân nhắc giá trị thay thế có căn cứ, chẳng hạn trung vị theo nhóm sản phẩm phù hợp.
+Sự tập trung của 6 trường hợp vào tháng 06–07/2018 là một đặc điểm đáng ghi nhận. Tuy nhiên, chỉ dựa trên số lượng missing chưa đủ để kết luận đây là lỗi hệ thống hoặc một vấn đề mang tính thời kỳ. Muốn xác định liệu tỷ lệ missing có bất thường trong giai đoạn này hay không, cần so sánh với tổng số đơn `delivered` được đặt trong từng tháng.
 
-### 3.6. Nội dung đánh giá khách hàng
+Đối với một đơn hàng thiếu cả hai mốc thời gian vận chuyển, hiện chưa có đủ thông tin để xác định quá trình giao hàng đã được ghi nhận như thế nào. Với 7 đơn còn lại, dữ liệu xác nhận đã có thời điểm bàn giao nhưng chưa ghi nhận thời điểm giao đến khách.
 
-`review_comment_message` thiếu 58.274/99.224 dòng (58,73%) và `review_comment_title` thiếu 87.658 dòng (88,34%). Điểm đánh giá (`review_score`) và các trường nhận diện/thời gian đánh giá không thiếu.
+**Kết luận:** Cả 8 đơn hàng được ghi nhận là các trường hợp missing cần theo dõi. Chưa đủ bằng chứng để xác định nguyên nhân thiếu timestamp, vì vậy không tự điền ngày giao thực tế hoặc sử dụng ngày giao dự kiến thay thế.
 
-Việc bỏ trống nội dung và tiêu đề có thể phản ánh khách hàng chọn chấm điểm mà không viết nhận xét, nên không mặc nhiên là lỗi dữ liệu. Tỷ lệ thiếu cao làm giảm tập mẫu dùng cho phân tích văn bản hoặc cảm xúc, nhưng không cản trở phân tích điểm số. Nên giữ giá trị trống/NULL thay vì điền nội dung suy đoán; khi phân tích văn bản cần báo cáo rõ số lượng review có nội dung.
+### 3.5. Kết luận và quyết định xử lý
 
-## 4. Đánh giá tác động và hướng xử lý
+Qua quá trình kiểm tra, xác định được ba nhóm dữ liệu có đặc điểm khác nhau:
 
-| Nhóm | Tác động chính | Hướng xử lý đề xuất |
+| Trạng thái | Phát hiện | Đánh giá |
 |---|---|---|
-| Nội dung đánh giá thiếu | Giảm số mẫu phân tích văn bản; không ảnh hưởng trực tiếp đến `review_score` | Giữ NULL; chỉ lọc khi phân tích nội dung, báo cáo mẫu khả dụng |
-| Timestamp đơn hàng thiếu | Ảnh hưởng đo thời gian xử lý/giao hàng và kiểm tra SLA | Không điền ngày tùy ý; đối chiếu trạng thái, rà soát các dòng `delivered` thiếu mốc và trường hợp timestamp sai thứ tự |
-| 610 sản phẩm thiếu metadata | Hạn chế phân tích danh mục và đặc điểm sản phẩm; đơn hàng vẫn có thể phân tích | Giữ sản phẩm và giao dịch; gắn nhãn thiếu khi cần tổng hợp danh mục; bổ sung từ nguồn đáng tin nếu có |
-| 2 sản phẩm thiếu kích thước | Ảnh hưởng nhỏ, tập trung vào phân tích vận chuyển/kích thước | Giữ NULL; loại khỏi phép tính cần đủ kích thước hoặc impute có kiểm soát |
+| `shipped` | 100% đơn thiếu ngày giao đến khách | Phù hợp với trạng thái được ghi nhận; chưa có dấu hiệu bất thường rõ ràng |
+| `canceled` | 6 đơn vẫn có ngày giao đến khách | Không nhất quán giữa trạng thái và timestamp; chưa xác định được nguyên nhân |
+| `delivered` | 8 đơn thiếu ngày giao đến khách | Thiếu timestamp cần thiết để xác định thời gian giao hàng thực tế |
 
-## 5. Điểm cần rà soát tiếp
+Dựa trên kết quả điều tra, quyết định xử lý như sau:
 
-1. Kiểm tra 14 đơn `delivered` thiếu `order_approved_at`, 2 đơn `delivered` thiếu `order_delivered_carrier_date`, và 8 đơn `delivered` thiếu `order_delivered_customer_date`.
-2. Rà soát đơn duy nhất có ngày giao khách nhưng thiếu ngày bàn giao cho vận chuyển; xác nhận timestamp và định nghĩa cột từ nguồn.
-3. Kiểm tra thứ tự thời gian giữa ngày mua, duyệt, bàn giao, giao khách để phát hiện lỗi logic ngoài trường hợp missing.
-4. Xác định liệu có nguồn sản phẩm đáng tin cậy để bổ sung metadata cho 610 sản phẩm và thuộc tính vật lý cho 2 sản phẩm hay không.
+1. **Giữ nguyên các giá trị missing:** Không tự điền `order_delivered_customer_date` khi không có nguồn dữ liệu đáng tin cậy để xác định thời điểm giao hàng thực tế.
+2. **Chuẩn hóa dữ liệu:** Chuyển các giá trị chuỗi rỗng hoặc chỉ chứa khoảng trắng thành `NULL` trong lớp dữ liệu đã làm sạch, đồng thời giữ nguyên dữ liệu staging.
+3. **Ghi nhận các trường hợp không nhất quán:** Lưu 6 đơn `canceled` có ngày giao đến khách vào nhật ký chất lượng dữ liệu. Không tự ý xóa timestamp hoặc thay đổi trạng thái đơn hàng.
+4. **Theo dõi 8 đơn `delivered` bị thiếu timestamp:** Giữ danh sách `order_id` để phục vụ đối chiếu nếu sau này có thêm nguồn dữ liệu.
+5. **Giới hạn sử dụng khi tính KPI:** Chỉ tính thời gian giao hàng thực tế trên các đơn có timestamp hợp lệ. Không sử dụng ngày giao dự kiến làm ngày giao thực tế; cần ghi rõ phạm vi và số lượng bản ghi bị loại khỏi phép tính nếu có.
 
-## 6. Kết luận
-
-Missing trong bộ dữ liệu tập trung vào các trường tùy chọn (nội dung review), các mốc thời gian chưa hoàn tất/không có giao hàng, và một nhóm sản phẩm thiếu metadata. Phần lớn trường hợp có thể được giữ nguyên như missing và xử lý theo mục tiêu phân tích. Các trường hợp cần ưu tiên kiểm tra là timestamp thiếu ở đơn `delivered` và một đơn có ngày giao khách nhưng thiếu ngày bàn giao. Nhóm 610 sản phẩm cần được giữ trong phân tích giao dịch, đồng thời đánh dấu thiếu metadata trong các phân tích sản phẩm.
-
-**Ghi chú phương pháp:** Tỷ lệ phần trăm được tính trên tổng số dòng của từng bảng. Việc phân loại theo `order_status` giúp đánh giá tính hợp lý nghiệp vụ nhưng không đủ để khẳng định nguyên nhân gốc của từng giá trị thiếu.
-
-## 7. Đánh giá và phương án
-
-* order_approved_at thiếu 160 dòng (0,16%), chủ yếu là đơn hủy hoặc mới tạo. Do không đủ thông tin nghiệp vụ để xác định nguyên nhân của 14 đơn delivered bất thường, dữ liệu được giữ nguyên NULL và ghi vào data_anomalies_log. Cột này không tham gia KPI chính của đề tài nên không ảnh hưởng đến kết luận.
+**Kết luận cuối cùng:** Không phải mọi giá trị missing của `order_delivered_customer_date` đều thể hiện lỗi dữ liệu. Nhóm `shipped` có thể được giải thích bằng trạng thái giao hàng chưa được ghi nhận hoàn tất, trong khi 8 đơn `delivered` bị thiếu timestamp và 6 đơn `canceled` vẫn có ngày giao đến khách cần được ghi nhận riêng. Do dữ liệu công khai không cung cấp đủ thông tin để xác minh nguyên nhân, dự án giữ nguyên dữ liệu gốc, không tự suy đoán giá trị thay thế và chỉ loại các bản ghi khỏi những phép tính mà timestamp bị thiếu làm ảnh hưởng đến tính chính xác.
