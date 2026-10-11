@@ -42,6 +42,24 @@ GROUP BY
 HAVING COUNT(*) > 1;
 
 
+/*Checking (order_id, product_id) PK in order_items*/
+SELECT
+    order_id,
+    product_id,
+    COUNT(*) AS duplicate_count
+FROM staging.olist_order_items
+GROUP BY order_id, product_id
+HAVING COUNT(*) > 1;
+
+/*Checking (order_id, order_item_id) as PK in order_items*/
+SELECT
+    order_id,
+    order_item_id,
+    COUNT(*) AS duplicate_count
+FROM staging.olist_order_items
+GROUP BY order_id, order_item_id
+HAVING COUNT(*) > 1;
+
 
 
 
