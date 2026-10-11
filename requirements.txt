@@ -1,0 +1,11 @@
+# Data analysis and CSV processing
+pandas
+numpy
+
+# Notebook support (including IPython.display used by the notebooks)
+jupyter
+
+# Load database credentials and connect to SQL Server from notebook 04
+python-dotenv
+SQLAlchemy
+pyodbc
