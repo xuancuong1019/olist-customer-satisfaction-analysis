@@ -41,7 +41,7 @@ GROUP BY
     geolocation_state
 HAVING COUNT(*) > 1;
 
-/*Checking*/
+
 
 
 
