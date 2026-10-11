@@ -61,5 +61,15 @@ GROUP BY order_id, order_item_id
 HAVING COUNT(*) > 1;
 
 
+/*Checking (order_id, payment_sequential) as PK in order_payments*/
+SELECT
+    order_id,
+    payment_sequential,
+    COUNT(*) AS duplicate_count
+FROM staging.olist_order_payments
+GROUP BY
+    order_id,
+    payment_sequential
+HAVING COUNT(*) > 1;
 
 
