@@ -24,5 +24,24 @@ ORDER BY table_name, column_name;';
 
 EXEC sp_executesql @sql;
 
+/*Checking duplicates on olist_geolocation*/
+SELECT
+    geolocation_zip_code_prefix,
+    geolocation_lat,
+    geolocation_lng,
+    geolocation_city,
+    geolocation_state,
+    COUNT(*) AS duplicate_count
+FROM staging.olist_geolocation
+GROUP BY
+    geolocation_zip_code_prefix,
+    geolocation_lat,
+    geolocation_lng,
+    geolocation_city,
+    geolocation_state
+HAVING COUNT(*) > 1;
+
+/*Checking*/
+
 
 

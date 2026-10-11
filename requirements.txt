@@ -5,7 +5,7 @@ numpy
 # Notebook support (including IPython.display used by the notebooks)
 jupyter
 
-# Load database credentials and connect to SQL Server from notebook 04
+# Load database credentials and connect to SQL Server from notebook 04_import_data_to_sql.ipynb
 python-dotenv
 SQLAlchemy
 pyodbc
