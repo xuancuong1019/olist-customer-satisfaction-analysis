@@ -43,33 +43,40 @@ HAVING COUNT(*) > 1;
 
 
 /*Checking (order_id, product_id) PK in order_items*/
-SELECT
-    order_id,
-    product_id,
-    COUNT(*) AS duplicate_count
+SELECT order_id, product_id, COUNT(*) AS duplicate_count
 FROM staging.olist_order_items
 GROUP BY order_id, product_id
 HAVING COUNT(*) > 1;
 
 /*Checking (order_id, order_item_id) as PK in order_items*/
-SELECT
-    order_id,
-    order_item_id,
-    COUNT(*) AS duplicate_count
+SELECT order_id, order_item_id, COUNT(*) AS duplicate_count
 FROM staging.olist_order_items
 GROUP BY order_id, order_item_id
 HAVING COUNT(*) > 1;
 
+/*Checking NULL in (order_id, item_id)*/
+SELECT order_id, order_item_id
+FROM staging.olist_order_items
+WHERE order_id IS NULL OR order_item_id IS NULL;
 
 /*Checking (order_id, payment_sequential) as PK in order_payments*/
-SELECT
-    order_id,
-    payment_sequential,
-    COUNT(*) AS duplicate_count
+SELECT order_id, payment_sequential, COUNT(*) AS duplicate_count
 FROM staging.olist_order_payments
-GROUP BY
-    order_id,
-    payment_sequential
+GROUP BY order_id,payment_sequential
 HAVING COUNT(*) > 1;
 
+/*Checking NULL in (order_id, payment_sequential)*/
+SELECT order_id, payment_sequential
+FROM staging.olist_order_payments
+WHERE order_id IS NULL OR payment_sequential IS NULL;
 
+/*Checking (review_id, order_id) as PK in order_reviews*/
+SELECT review_id, order_id, COUNT(*) AS duplicate_count
+FROM staging.olist_order_reviews
+GROUP BY review_id, order_id
+HAVING COUNT(*) > 1;
+
+/*Checking null in (review_id, order_id)*/
+SELECT review_id, order_id
+FROM staging.olist_order_reviews
+WHERE review_id IS NULL OR order_id IS NULL;
