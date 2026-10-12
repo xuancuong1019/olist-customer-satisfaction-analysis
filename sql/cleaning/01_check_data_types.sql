@@ -24,23 +24,20 @@ ORDER BY table_name, column_name;';
 
 EXEC sp_executesql @sql;
 
-/*Checking duplicates on olist_geolocation*/
-SELECT
-    geolocation_zip_code_prefix,
-    geolocation_lat,
-    geolocation_lng,
-    geolocation_city,
-    geolocation_state,
-    COUNT(*) AS duplicate_count
-FROM staging.olist_geolocation
-GROUP BY
-    geolocation_zip_code_prefix,
-    geolocation_lat,
-    geolocation_lng,
-    geolocation_city,
-    geolocation_state
-HAVING COUNT(*) > 1;
+/* ==============================================================================
+   CHECKING POSSIBLITIES FOR PK 
+   ============================================================================== */
 
+/*Checking duplicates on olist_geolocation*/
+SELECT geolocation_zip_code_prefix, COUNT(DISTINCT geolocation_zip_code_prefix) AS duplicate_count
+FROM staging.olist_geolocation
+GROUP BY geolocation_zip_code_prefix
+HAVING COUNT(DISTINCT geolocation_zip_code_prefix) > 1;
+
+/*Checking NULL in geolocation_zip_code_prefix*/
+SELECT geolocation_zip_code_prefix
+FROM staging.olist_geolocation
+WHERE geolocation_zip_code_prefix IS NULL;
 
 /*Checking (order_id, product_id) PK in order_items*/
 SELECT order_id, product_id, COUNT(*) AS duplicate_count
@@ -124,3 +121,7 @@ HAVING COUNT(*) > 1;
 SELECT product_category_name
 FROM staging.product_category_name_translation
 WHERE product_category_name IS NULL;
+
+/* ==============================================================================
+   CHECKING POSSIBLITIES FOR FK 
+   ============================================================================== */
