@@ -102,3 +102,16 @@ HAVING COUNT(*) > 1;
 SELECT product_id
 FROM staging.olist_order_items
 WHERE product_id IS NULL;
+
+/*Checking seller_id as PK in olist_sellers*/
+SELECT seller_id, COUNT(*) AS duplicate_count
+FROM staging.olist_sellers
+GROUP BY seller_id
+HAVING COUNT(*) > 1;
+
+/*Checking NULL in seller_id*/
+SELECT seller_id
+FROM staging.olist_sellers
+WHERE seller_id IS NULL;
+
+
