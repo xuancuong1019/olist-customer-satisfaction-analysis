@@ -80,3 +80,14 @@ HAVING COUNT(*) > 1;
 SELECT review_id, order_id
 FROM staging.olist_order_reviews
 WHERE review_id IS NULL OR order_id IS NULL;
+
+/*Checking order_id as  PK in olist_orders*/
+SELECT order_id, COUNT(*) AS duplicate_count
+FROM staging.olist_orders
+GROUP BY order_id
+HAVING COUNT(*) > 1;
+
+/*Checking NULL in order_id*/
+SELECT order_id
+FROM staging.olist_orders
+WHERE order_id IS NULL;
