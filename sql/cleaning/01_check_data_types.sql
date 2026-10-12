@@ -291,8 +291,37 @@ WHERE product_category_name IN (
     'portateis_cozinha_e_preparadores_de_alimentos'
 );
 
-/*Adding english meaning for these 2 categories in cleaning schema*/
+/*Adding english meaning for these 2 categories in cleaned tables*/
+-- CHECK: Customer ZIP prefix don't exist in geolocation
 
+SELECT
+    c.customer_zip_code_prefix,
+    COUNT(*) AS total_rows
+FROM staging.olist_customers AS c
+WHERE NULLIF(LTRIM(RTRIM(c.customer_zip_code_prefix)), '') IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM staging.olist_geolocation AS g
+      WHERE LTRIM(RTRIM(g.geolocation_zip_code_prefix))
+          = LTRIM(RTRIM(c.customer_zip_code_prefix))
+  )
+GROUP BY c.customer_zip_code_prefix
+ORDER BY c.customer_zip_code_prefix;
 
+-- CHECK: Seller ZIP prefix don't exist geolocation
+
+SELECT
+    s.seller_zip_code_prefix,
+    COUNT(*) AS total_rows
+FROM staging.olist_sellers AS s
+WHERE NULLIF(LTRIM(RTRIM(s.seller_zip_code_prefix)), '') IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM staging.olist_geolocation AS g
+      WHERE LTRIM(RTRIM(g.geolocation_zip_code_prefix))
+          = LTRIM(RTRIM(s.seller_zip_code_prefix))
+  )
+GROUP BY s.seller_zip_code_prefix
+ORDER BY s.seller_zip_code_prefix;
 
 
