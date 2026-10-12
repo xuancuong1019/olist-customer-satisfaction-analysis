@@ -125,11 +125,6 @@ WHERE product_category_name IS NULL;
 /* ==============================================================================
    CHECKING POSSIBLITIES FOR FK 
    ============================================================================== */
-
--- Kiểm tra các giá trị FK không tồn tại trong bảng cha
--- Kết quả chỉ hiển thị các giá trị không khớp.
--- child_rows = số bản ghi con chứa giá trị FK đó.
-
 -- 1. customers -> geolocation
 SELECT
     CAST('customers.customer_zip_code_prefix -> geolocation.geolocation_zip_code_prefix'
@@ -297,6 +292,7 @@ WHERE product_category_name IN (
 );
 
 /*Adding english meaning for these 2 categories in cleaning schema*/
+
 
 
 
