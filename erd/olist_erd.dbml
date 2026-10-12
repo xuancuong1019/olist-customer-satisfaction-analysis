@@ -1,43 +1,44 @@
+
 Project olist_erd {
   database_type: 'SQL Server'
   Note: 'Logical ERD for Olist e-commerce dataset'
 }
 
 Table olist_customers {
-  customer_id varchar [pk]
-  customer_unique_id varchar
-  customer_zip_code_prefix varchar
-  customer_city varchar
-  customer_state varchar
+  customer_id varchar(32) [pk]
+  customer_unique_id varchar(32)
+  customer_zip_code_prefix varchar(5)
+  customer_city varchar(32)
+  customer_state varchar(2)
 }
 
 Table olist_geolocation {
-  geolocation_zip_code_prefix varchar [pk]
-  geolocation_lat varchar
-  geolocation_lng varchar
-  geolocation_city varchar
-  geolocation_state varchar
+  geolocation_zip_code_prefix varchar(5) [pk]
+  geolocation_lat decimal(20,18)
+  geolocation_lng decimal(20,18)
+  geolocation_city varchar(38)
+  geolocation_state varchar(2)
 }
 
 Table olist_orders {
-  order_id varchar [pk]
-  customer_id varchar
-  order_status varchar
-  order_purchase_timestamp varchar
-  order_approved_at varchar
-  order_delivered_carrier_date varchar
-  order_delivered_customer_date varchar
-  order_estimated_delivery_date varchar
+  order_id varchar(32) [pk]
+  customer_id varchar(32)
+  order_status varchar(11)
+  order_purchase_timestamp datetime2
+  order_approved_at datetime2
+  order_delivered_carrier_date datetime2
+  order_delivered_customer_date datetime2
+  order_estimated_delivery_date datetime2
 }
 
 Table olist_order_items {
-  order_id varchar
-  order_item_id varchar
-  product_id varchar
-  seller_id varchar
-  shipping_limit_date varchar
-  price varchar
-  freight_value varchar
+  order_id varchar(32)
+  order_item_id int
+  product_id varchar(32)
+  seller_id varchar(32)
+  shipping_limit_date datetime2
+  price decimal(5,2)
+  freight_value decimal(5,2)
 
   indexes {
     (order_id, order_item_id) [pk]
@@ -45,11 +46,11 @@ Table olist_order_items {
 }
 
 Table olist_order_payments {
-  order_id varchar
-  payment_sequential varchar
-  payment_type varchar
-  payment_installments varchar
-  payment_value varchar
+  order_id varchar(32)
+  payment_sequential int
+  payment_type varchar(11)
+  payment_installments int
+  payment_value decimal(7,2)
 
   indexes {
     (order_id, payment_sequential) [pk]
@@ -57,13 +58,13 @@ Table olist_order_payments {
 }
 
 Table olist_order_reviews {
-  review_id varchar
-  order_id varchar
-  review_score varchar
-  review_comment_title varchar
-  review_comment_message varchar
-  review_creation_date varchar
-  review_answer_timestamp varchar
+  review_id varchar(32)
+  order_id varchar(32)
+  review_score int
+  review_comment_title varchar(26)
+  review_comment_message varchar(208)
+  review_creation_date datetime2
+  review_answer_timestamp datetime2
 
   indexes {
     (review_id, order_id) [pk]
@@ -71,32 +72,32 @@ Table olist_order_reviews {
 }
 
 Table olist_products {
-  product_id varchar [pk]
-  product_category_name varchar
-  product_name_lenght varchar
-  product_description_lenght varchar
-  product_photos_qty varchar
-  product_weight_g varchar
-  product_length_cm varchar
-  product_height_cm varchar
-  product_width_cm varchar
+  product_id varchar(32) [pk]
+  product_category_name varchar(46)
+  product_name_lenght int
+  product_description_lenght int
+  product_photos_qty int
+  product_weight_g int
+  product_length_cm int
+  product_height_cm int
+  product_width_cm int
 }
 
 Table olist_sellers {
-  seller_id varchar [pk]
-  seller_zip_code_prefix varchar
-  seller_city varchar
-  seller_state varchar
+  seller_id varchar(32) [pk]
+  seller_zip_code_prefix varchar(5)
+  seller_city varchar(40)
+  seller_state varchar(2)
 }
 
 Table product_category {
-  product_category_name varchar [pk]
-  product_category_name_english varchar
+  product_category_name varchar(46) [pk]
+  product_category_name_english varchar(39)
 }
 
 Table product_category_name_translation {
-  product_category_name varchar [pk]
-  product_category_name_english varchar
+  product_category_name varchar(46) [pk]
+  product_category_name_english varchar(39)
 }
 
 
