@@ -70,7 +70,143 @@
     ],
     "tableGroupCollapseStates": [],
     "stickyNoteLayouts": [],
-    "referencePaths": []
+    "referencePaths": [
+      {
+        "firstFieldNames": [
+          "customer_zip_code_prefix"
+        ],
+        "firstTableName": "olist_customers",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "geolocation_zip_code_prefix"
+        ],
+        "secondTableName": "olist_geolocation",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "order_id"
+        ],
+        "firstTableName": "olist_order_items",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "order_id"
+        ],
+        "secondTableName": "olist_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "seller_id"
+        ],
+        "firstTableName": "olist_order_items",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "seller_id"
+        ],
+        "secondTableName": "olist_sellers",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "product_id"
+        ],
+        "firstTableName": "olist_order_items",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "product_id"
+        ],
+        "secondTableName": "olist_products",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "order_id"
+        ],
+        "firstTableName": "olist_order_payments",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "order_id"
+        ],
+        "secondTableName": "olist_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "order_id"
+        ],
+        "firstTableName": "olist_order_reviews",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "order_id"
+        ],
+        "secondTableName": "olist_orders",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "customer_id"
+        ],
+        "firstTableName": "olist_orders",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "customer_id"
+        ],
+        "secondTableName": "olist_customers",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "product_category_name"
+        ],
+        "firstTableName": "olist_products",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "product_category_name"
+        ],
+        "secondTableName": "product_category_name_translation",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "seller_zip_code_prefix"
+        ],
+        "firstTableName": "olist_sellers",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "geolocation_zip_code_prefix"
+        ],
+        "secondTableName": "olist_geolocation",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      }
+    ]
   },
   "views": {}
 }
