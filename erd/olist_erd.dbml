@@ -90,11 +90,6 @@ Table olist_sellers {
   seller_state varchar(2)
 }
 
-Table product_category {
-  product_category_name varchar(46) [pk]
-  product_category_name_english varchar(39)
-}
-
 Table product_category_name_translation {
   product_category_name varchar(46) [pk]
   product_category_name_english varchar(39)
