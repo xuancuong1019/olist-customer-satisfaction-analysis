@@ -1,0 +1,119 @@
+Project olist_erd {
+  database_type: 'SQL Server'
+  Note: 'Logical ERD for Olist e-commerce dataset'
+}
+
+Table olist_customers {
+  customer_id varchar [pk]
+  customer_unique_id varchar
+  customer_zip_code_prefix varchar
+  customer_city varchar
+  customer_state varchar
+}
+
+Table olist_geolocation {
+  geolocation_zip_code_prefix varchar [pk]
+  geolocation_lat varchar
+  geolocation_lng varchar
+  geolocation_city varchar
+  geolocation_state varchar
+}
+
+Table olist_orders {
+  order_id varchar [pk]
+  customer_id varchar
+  order_status varchar
+  order_purchase_timestamp varchar
+  order_approved_at varchar
+  order_delivered_carrier_date varchar
+  order_delivered_customer_date varchar
+  order_estimated_delivery_date varchar
+}
+
+Table olist_order_items {
+  order_id varchar
+  order_item_id varchar
+  product_id varchar
+  seller_id varchar
+  shipping_limit_date varchar
+  price varchar
+  freight_value varchar
+
+  indexes {
+    (order_id, order_item_id) [pk]
+  }
+}
+
+Table olist_order_payments {
+  order_id varchar
+  payment_sequential varchar
+  payment_type varchar
+  payment_installments varchar
+  payment_value varchar
+
+  indexes {
+    (order_id, payment_sequential) [pk]
+  }
+}
+
+Table olist_order_reviews {
+  review_id varchar
+  order_id varchar
+  review_score varchar
+  review_comment_title varchar
+  review_comment_message varchar
+  review_creation_date varchar
+  review_answer_timestamp varchar
+
+  indexes {
+    (review_id, order_id) [pk]
+  }
+}
+
+Table olist_products {
+  product_id varchar [pk]
+  product_category_name varchar
+  product_name_lenght varchar
+  product_description_lenght varchar
+  product_photos_qty varchar
+  product_weight_g varchar
+  product_length_cm varchar
+  product_height_cm varchar
+  product_width_cm varchar
+}
+
+Table olist_sellers {
+  seller_id varchar [pk]
+  seller_zip_code_prefix varchar
+  seller_city varchar
+  seller_state varchar
+}
+
+Table product_category {
+  product_category_name varchar [pk]
+  product_category_name_english varchar
+}
+
+Table product_category_name_translation {
+  product_category_name varchar [pk]
+  product_category_name_english varchar
+}
+
+
+// Foreign-key relationships
+
+Ref: olist_customers.customer_zip_code_prefix > olist_geolocation.geolocation_zip_code_prefix
+
+Ref: olist_order_items.order_id > olist_orders.order_id
+Ref: olist_order_items.seller_id > olist_sellers.seller_id
+Ref: olist_order_items.product_id > olist_products.product_id
+
+Ref: olist_order_payments.order_id > olist_orders.order_id
+
+Ref: olist_order_reviews.order_id > olist_orders.order_id
+
+Ref: olist_orders.customer_id > olist_customers.customer_id
+
+Ref: olist_products.product_category_name > product_category_name_translation.product_category_name
+
+Ref: olist_sellers.seller_zip_code_prefix > olist_geolocation.geolocation_zip_code_prefix
