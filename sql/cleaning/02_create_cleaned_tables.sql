@@ -18,8 +18,8 @@ GO
 -- 2.1 Geolocation
 CREATE TABLE cleaning.olist_geolocation (
     geolocation_zip_code_prefix VARCHAR(5) NOT NULL,
-    geolocation_lat             DECIMAL(20,18) NOT NULL,
-    geolocation_lng             DECIMAL(20,18) NOT NULL,
+    geolocation_lat             DECIMAL(22,18) NOT NULL,
+    geolocation_lng             DECIMAL(22,18) NOT NULL,
     geolocation_city            VARCHAR(38) NOT NULL,
     geolocation_state           VARCHAR(2) NOT NULL,
 
@@ -27,6 +27,7 @@ CREATE TABLE cleaning.olist_geolocation (
         PRIMARY KEY (geolocation_zip_code_prefix)
 );
 GO
+
 
 
 -- 2.2 Customers
@@ -146,6 +147,7 @@ CREATE TABLE cleaning.olist_order_reviews (
         PRIMARY KEY (review_id, order_id)
 );
 GO
+
 
 
 /* =========================================================
