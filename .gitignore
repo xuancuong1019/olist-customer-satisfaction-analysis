@@ -15,3 +15,13 @@ env/
 # 3. Bỏ qua các file hệ điều hành tự sinh ra
 .DS_Store
 Thumbs.db
+
+# 4. Bỏ qua hình ảnh
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.bmp
+*.ico
