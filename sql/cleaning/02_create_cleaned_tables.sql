@@ -22,12 +22,8 @@ CREATE TABLE cleaning.olist_geolocation (
     geolocation_lng             DECIMAL(22,18) NOT NULL,
     geolocation_city            VARCHAR(38) NOT NULL,
     geolocation_state           VARCHAR(2) NOT NULL,
-
-    CONSTRAINT PK_cleaning_olist_geolocation
-        PRIMARY KEY (geolocation_zip_code_prefix)
 );
 GO
-
 
 
 -- 2.2 Customers

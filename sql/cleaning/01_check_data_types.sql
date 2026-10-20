@@ -320,8 +320,27 @@ WHERE NULLIF(LTRIM(RTRIM(s.seller_zip_code_prefix)), '') IS NOT NULL
       FROM staging.olist_geolocation AS g
       WHERE LTRIM(RTRIM(g.geolocation_zip_code_prefix))
           = LTRIM(RTRIM(s.seller_zip_code_prefix))
-  )
+)
 GROUP BY s.seller_zip_code_prefix
 ORDER BY s.seller_zip_code_prefix;
 
 
+/* =========================================================
+   1. PRE-CHECK: DESTINATION TABLES MUST BE EMPTY
+   ========================================================= */
+
+IF EXISTS (SELECT 1 FROM cleaning.olist_geolocation)
+OR EXISTS (SELECT 1 FROM cleaning.olist_customers)
+OR EXISTS (SELECT 1 FROM cleaning.olist_sellers)
+OR EXISTS (SELECT 1 FROM cleaning.product_category_name_translation)
+OR EXISTS (SELECT 1 FROM cleaning.olist_products)
+OR EXISTS (SELECT 1 FROM cleaning.olist_orders)
+OR EXISTS (SELECT 1 FROM cleaning.olist_order_items)
+OR EXISTS (SELECT 1 FROM cleaning.olist_order_payments)
+OR EXISTS (SELECT 1 FROM cleaning.olist_order_reviews)
+BEGIN
+    THROW 51000,
+        'Cleaning tables are not empty. Check existing data before loading.',
+        1;
+END;
+GO
