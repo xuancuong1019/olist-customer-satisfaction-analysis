@@ -28,20 +28,20 @@
       {
         "name": "olist_order_items",
         "schemaName": "public",
-        "x": 1298.020966426031,
-        "y": 827.994239818091
+        "x": 1126.6153297803548,
+        "y": 660.2355316116849
       },
       {
         "name": "olist_order_payments",
         "schemaName": "public",
-        "x": 1557.8873941583997,
-        "y": 33.65688501619803
+        "x": 1576.1220363547482,
+        "y": 230.59102073676192
       },
       {
         "name": "olist_order_reviews",
         "schemaName": "public",
-        "x": 1596.5909046717316,
-        "y": 409.88370827809626
+        "x": 1549.1808349612256,
+        "y": 496
       },
       {
         "name": "olist_products",
@@ -54,12 +54,6 @@
         "schemaName": "public",
         "x": 578.33740234375,
         "y": 798
-      },
-      {
-        "name": "product_category",
-        "schemaName": "public",
-        "x": 12,
-        "y": 12
       },
       {
         "name": "product_category_name_translation",

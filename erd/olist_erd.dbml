@@ -12,7 +12,7 @@ Table olist_customers {
 }
 
 Table olist_geolocation {
-  geolocation_zip_code_prefix varchar(5) [pk, not null]
+  geolocation_zip_code_prefix varchar(5) [not null]
   geolocation_lat decimal(20,18) [not null]
   geolocation_lng decimal(20,18) [not null]
   geolocation_city varchar(38) [not null]
@@ -97,8 +97,6 @@ Table product_category_name_translation {
 
 // Foreign-key relationships
 
-Ref: olist_customers.customer_zip_code_prefix > olist_geolocation.geolocation_zip_code_prefix
-
 Ref: olist_order_items.order_id > olist_orders.order_id
 Ref: olist_order_items.seller_id > olist_sellers.seller_id
 Ref: olist_order_items.product_id > olist_products.product_id
@@ -111,4 +109,3 @@ Ref: olist_orders.customer_id > olist_customers.customer_id
 
 Ref: olist_products.product_category_name > product_category_name_translation.product_category_name
 
-Ref: olist_sellers.seller_zip_code_prefix > olist_geolocation.geolocation_zip_code_prefix
