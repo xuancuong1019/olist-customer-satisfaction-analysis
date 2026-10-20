@@ -133,4 +133,3 @@ CREATE TABLE staging.product_category_name_translation (
     product_category_name_english VARCHAR(100)
 );
 GO
-```

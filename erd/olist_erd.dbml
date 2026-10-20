@@ -1,4 +1,3 @@
-
 Project olist_erd {
   database_type: 'SQL Server'
   Note: 'Logical ERD for Olist e-commerce dataset'
